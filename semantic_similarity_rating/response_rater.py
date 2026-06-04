@@ -259,7 +259,8 @@ class ResponseRater:
             if not isinstance(llm_responses, np.ndarray):
                 raise ValueError(
                     "ResponseRater is in embedding mode (dataframe contains 'embedding' column). "
-                    "Expected numpy array of embeddings, got: " + str(type(llm_responses))
+                    "Expected numpy array of embeddings, got: "
+                    + str(type(llm_responses))
                 )
             llm_response_matrix = llm_responses
         else:
