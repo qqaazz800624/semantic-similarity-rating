@@ -229,11 +229,90 @@ class ResponseRater:
             )
 
         if temperature != 1.0:
-            llm_response_pmfs = np.array(
-                [compute.scale_pmf(_pmf, temperature) for _pmf in llm_response_pmfs]
-            )
+            llm_response_pmfs = compute.scale_pmfs(llm_response_pmfs, temperature)
 
         return llm_response_pmfs
+
+    def compute_response_similarities(self, llm_responses):
+        """
+        Precompute per-reference-set cosine similarity statistics for responses.
+
+        Use this together with :meth:`pmfs_from_similarities` when sweeping over
+        a grid of ``(temperature, epsilon)`` values — the embedding encoding,
+        normalization, and matmul run once; the inner loop becomes pure
+        elementwise arithmetic on the cached row-wise reductions.
+
+        Parameters
+        ----------
+        llm_responses : list of str or numpy.ndarray
+            Text mode: list of strings. Embedding mode: ``(n_responses, dim)`` array.
+
+        Returns
+        -------
+        dict
+            Maps reference-set id (str) to a stats dict from
+            :func:`compute.precompute_similarity_stats`. Keys in the dict are
+            ``cos`` (``(n, 5)``), ``cos_min`` (``(n, 1)``), ``cos_sum`` (``(n, 1)``),
+            and ``min_indices`` (``(n,)``).
+        """
+        if self.embedding_mode:
+            if not isinstance(llm_responses, np.ndarray):
+                raise ValueError(
+                    "ResponseRater is in embedding mode (dataframe contains 'embedding' column). "
+                    "Expected numpy array of embeddings, got: "
+                    + str(type(llm_responses))
+                )
+            llm_response_matrix = llm_responses
+        else:
+            if not isinstance(llm_responses, (list, tuple)):
+                raise ValueError(
+                    "ResponseRater is in text mode (no 'embedding' column in dataframe). "
+                    "Expected list of text strings, got: " + str(type(llm_responses))
+                )
+            llm_response_matrix = self.model.encode(llm_responses)
+
+        stats_by_ref = {}
+        for ref_id, M in self.reference_matrices.items():
+            cos = compute.cosine_similarity_matrix(llm_response_matrix, M)
+            stats_by_ref[ref_id] = compute.precompute_similarity_stats(cos)
+        return stats_by_ref
+
+    def pmfs_from_similarities(
+        self, reference_set_id, similarity_stats, temperature=1.0, epsilon=0.0
+    ):
+        """
+        Map precomputed similarity stats to PMFs — no encoding, no matmul.
+
+        Parameters
+        ----------
+        reference_set_id : str
+            Reference set id, or ``'mean'`` to average PMFs across all sets.
+        similarity_stats : dict
+            Output of :meth:`compute_response_similarities`.
+        temperature : float, default 1.0
+            Temperature for ``scale_pmfs`` (applied if != 1.0).
+        epsilon : float, default 0.0
+            Regularization passed to ``similarities_to_pmf``.
+
+        Returns
+        -------
+        numpy.ndarray, shape (n_responses, n_likert_points)
+        """
+        if isinstance(reference_set_id, str) and reference_set_id.lower() == "mean":
+            pmfs = np.array(
+                [
+                    compute.similarities_to_pmf(stats, epsilon)
+                    for stats in similarity_stats.values()
+                ]
+            ).mean(axis=0)
+        else:
+            pmfs = compute.similarities_to_pmf(
+                similarity_stats[reference_set_id], epsilon
+            )
+
+        if temperature != 1.0:
+            pmfs = compute.scale_pmfs(pmfs, temperature)
+        return pmfs
 
     def get_survey_response_pmf(self, response_pmfs):
         """
