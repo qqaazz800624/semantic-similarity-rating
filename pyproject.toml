@@ -10,7 +10,7 @@ dependencies = [
 description = "A Python package implementing the Embeddings-Similarity Rating methodology for converting LLM textual responses to Likert scale probability distributions using semantic similarity against reference statements."
 name = "semantic_similarity_rating"
 requires-python = ">= 3.10"
-version = "1.0.0"
+version = "1.1.0"
 readme = "README.md"
 license = { text = "MIT" }
 keywords = ["embeddings", "llm", "likert", "similarity", "nlp"]
