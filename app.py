@@ -12,6 +12,7 @@ Run:
     streamlit run app.py
 """
 
+import hmac
 import os
 import time
 import uuid
@@ -213,7 +214,39 @@ def make_likert_bar_chart(labels: list[str], pmf: np.ndarray, title: str) -> go.
     return fig
 
 
+def check_password() -> bool:
+    """Gate the app behind APP_PASSWORD when it is set in the environment.
+
+    No APP_PASSWORD configured -> app stays open (local/trusted-LAN use).
+    Set it in .env before exposing the app through a public tunnel.
+    """
+    expected = os.environ.get("APP_PASSWORD", "")
+    if not expected:
+        return True
+    if st.session_state.get("password_ok"):
+        return True
+
+    def _verify() -> None:
+        entered = st.session_state.pop("app_password_input", "")
+        st.session_state.password_ok = hmac.compare_digest(entered, expected)
+
+    st.title("AI 模擬問卷調查系統")
+    st.text_input(
+        "請輸入使用密碼",
+        type="password",
+        key="app_password_input",
+        on_change=_verify,
+    )
+    if st.session_state.get("password_ok") is False:
+        st.error("密碼錯誤，請再試一次。")
+    return False
+
+
 st.set_page_config(page_title="AI 模擬問卷調查系統", layout="wide")
+
+if not check_password():
+    st.stop()
+
 _init_state()
 
 st.title("AI 模擬問卷調查系統")

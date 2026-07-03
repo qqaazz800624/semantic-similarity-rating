@@ -122,7 +122,25 @@ Network: http://<your-ip>:8501
 - Open the **Local** URL yourself.
 - Share the **Network** URL with colleagues on the same network so they can use the app from their own browser, running on your machine.
 
-> Note: the app has no login/authentication. Anyone with the Network URL on the same network can use it, and every run consumes your Gemini API key's quota. Only share it with people you trust, and stop the server (`Ctrl+C`) when you're done.
+> Note: with the Network URL, anyone on the same network can use the app, and every run consumes your Gemini API key's quota. Only share it with people you trust, and stop the server (`Ctrl+C`) when you're done. To require a password, add `APP_PASSWORD=your-password` to `.env`.
+
+### Sharing with colleagues outside your network (e.g. working from home)
+
+The Network URL only works on the same local network. To share the app with a colleague anywhere on the internet, use the Cloudflare-tunnel launcher instead:
+
+```bash
+brew install cloudflared   # one-time setup
+./run_app_public.sh
+```
+
+This starts the app **plus** a Cloudflare quick tunnel and prints a public `https://….trycloudflare.com` URL. Your colleague opens that URL in any browser — nothing to install on her side — and enters the `APP_PASSWORD` from your `.env`.
+
+Notes:
+
+- `APP_PASSWORD` must be set in `.env`; the script refuses to start without it, since the URL is reachable from the whole internet.
+- The public URL **changes on every launch** — always share the freshly printed one, and send the URL and password through separate channels.
+- The app runs on your machine: keep it on and connected (the script uses `caffeinate` to prevent sleep while serving).
+- Stop sharing with `Ctrl+C`.
 
 ### 5. Use the app
 
