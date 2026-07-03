@@ -27,7 +27,25 @@ from semantic_similarity_rating import ResponseRater
 
 load_dotenv()
 
-MODEL_NAME = "gemini-flash-lite-latest"
+DEFAULT_MODEL_NAME = "gemini-flash-lite-latest"
+
+# The models.list endpoint also returns TTS / image / music / robotics models
+# that support generateContent but can't do plain text survey answers.
+NON_TEXT_MODEL_KEYWORDS = (
+    "tts",
+    "image",
+    "banana",
+    "lyria",
+    "veo",
+    "robotics",
+    "computer-use",
+    "antigravity",
+    "deep-research",
+    "omni",
+    "live",
+    "audio",
+    "embedding",
+)
 
 # Diverging blue<->red palette for the 5-pt Likert polarity axis (disagree <-> agree).
 # Neutral midpoint uses the more visible baseline-gray role rather than the
@@ -94,8 +112,34 @@ def get_genai_client(api_key: str) -> genai.Client:
     return genai.Client(api_key=api_key)
 
 
+@st.cache_data(show_spinner=False, ttl=3600)
+def list_text_models(api_key: str) -> list[str]:
+    """Text-capable Gemini/Gemma models available to this API key.
+
+    Falls back to just the default model if the listing call fails
+    (e.g. network issue or restricted key) so the app stays usable.
+    """
+    try:
+        client = get_genai_client(api_key)
+        names = []
+        for m in client.models.list():
+            if "generateContent" not in (m.supported_actions or []):
+                continue
+            name = (m.name or "").removeprefix("models/")
+            if any(kw in name for kw in NON_TEXT_MODEL_KEYWORDS):
+                continue
+            names.append(name)
+        return sorted(names) or [DEFAULT_MODEL_NAME]
+    except Exception:
+        return [DEFAULT_MODEL_NAME]
+
+
 def get_llm_free_text_response(
-    client: genai.Client, persona: str, question: str, max_retries: int = 3
+    client: genai.Client,
+    model_name: str,
+    persona: str,
+    question: str,
+    max_retries: int = 3,
 ) -> str:
     prompt = f"""
 Background Persona: {persona}
@@ -111,7 +155,7 @@ ratings, labels, or quotes. Must respond in English.
 """
     for attempt in range(max_retries):
         try:
-            response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
+            response = client.models.generate_content(model=model_name, contents=prompt)
             return response.text.strip()
         except Exception:
             if attempt == max_retries - 1:
@@ -190,6 +234,22 @@ with st.sidebar:
             key="api_key_override",
         )
 
+    st.subheader("LLM 模型")
+    if effective_api_key:
+        model_options = list_text_models(effective_api_key)
+    else:
+        model_options = [DEFAULT_MODEL_NAME]
+    model_name = st.selectbox(
+        "選擇要模擬受訪者的模型",
+        options=model_options,
+        index=model_options.index(DEFAULT_MODEL_NAME)
+        if DEFAULT_MODEL_NAME in model_options
+        else 0,
+        help="清單為你的 API Key 目前可用的文字生成模型。"
+        "flash-lite 最快最便宜；pro 系列品質較高但較慢、較貴。",
+        key="model_name",
+    )
+
     rater = get_rater()
     with st.expander("進階設定"):
         reference_set_id = st.selectbox(
@@ -263,7 +323,7 @@ if run_clicked:
         for i, persona in enumerate(persona_texts):
             try:
                 text = get_llm_free_text_response(
-                    client, persona, st.session_state.survey_question
+                    client, model_name, persona, st.session_state.survey_question
                 )
                 responses.append(text)
                 st.write(f'受訪者 {i + 1}："{text}"')
@@ -293,6 +353,7 @@ if run_clicked:
         "valid_idx": valid_idx,
         "pmfs": pmfs,
         "survey_pmf": survey_pmf,
+        "model_name": model_name,
         "reference_set_id": reference_set_id,
         "temperature": temperature,
         "scale_labels": rater.get_reference_sentences("plain"),
@@ -302,6 +363,8 @@ if run_clicked:
 results = st.session_state.results
 if results:
     st.subheader("4. 結果")
+    if results.get("model_name"):
+        st.caption(f"使用模型：{results['model_name']}")
 
     if results["survey_pmf"] is not None:
         st.markdown("### 整體彙總分佈 (Survey PMF)")

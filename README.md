@@ -126,10 +126,11 @@ Network: http://<your-ip>:8501
 
 ### 5. Use the app
 
-1. Enter the survey statement.
-2. Add/remove respondent personas (each one a free-text description).
-3. Click **開始模擬問卷調查 (Run survey)**.
-4. Review per-respondent and aggregated Likert-scale results, and optionally download them as CSV.
+1. (Optional) In the sidebar, pick the **LLM model** used to simulate respondents. The dropdown is fetched live from the Gemini API, so it always reflects the text-generation models your API key can use. The default `gemini-flash-lite-latest` is the fastest and cheapest; `pro`-series models give higher-quality answers but are slower and cost more.
+2. Enter the survey statement.
+3. Add/remove respondent personas (each one a free-text description).
+4. Click **開始模擬問卷調查 (Run survey)**.
+5. Review per-respondent and aggregated Likert-scale results (the model used is shown at the top of the results), and optionally download them as CSV.
 
 ## Methodology
 
