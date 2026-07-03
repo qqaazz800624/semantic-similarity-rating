@@ -27,6 +27,7 @@ classifiers = [
 
 [project.optional-dependencies]
 test = ["pytest"]
+app = ["streamlit>=1.38", "plotly>=5.20", "google-genai>=0.3", "python-dotenv>=1.0"]
 
 [build-system]
 build-backend = "hatchling.build"
@@ -56,6 +57,7 @@ sentence-transformers = "*"
 default = { features = ["test"], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
 minimal = { features = [], solve-group = "default" }
+app = { features = ["app"], solve-group = "default" }
 
 [tool.pixi.feature.test.tasks]
 test = "pytest"
