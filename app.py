@@ -182,24 +182,37 @@ ratings, labels, or quotes. Must respond in English.
 
 
 # --- Persona list state ---
+# Persona texts live in persona_store (a plain dict), NOT in the widget keys:
+# Streamlit deletes widget-backed session values after any rerun where the
+# widget isn't rendered (e.g. while showing the login screen after a logout),
+# which wiped the example personas. Plain session values survive; the widgets
+# re-seed from the store via value= and write back via on_change.
+def _sync_persona(pid: str) -> None:
+    st.session_state.persona_store[pid] = st.session_state.get(
+        f"persona_text::{pid}", ""
+    )
+
+
 def _add_persona() -> None:
     pid = uuid.uuid4().hex
     st.session_state.persona_order.append(pid)
-    st.session_state[f"persona_text::{pid}"] = ""
+    st.session_state.persona_store[pid] = ""
 
 
 def _remove_persona(pid: str) -> None:
     st.session_state.persona_order.remove(pid)
+    st.session_state.persona_store.pop(pid, None)
     st.session_state.pop(f"persona_text::{pid}", None)
 
 
 def _init_state() -> None:
     if "persona_order" not in st.session_state:
         st.session_state.persona_order = []
+        st.session_state.persona_store = {}
         for text in DEFAULT_PERSONAS:
             pid = uuid.uuid4().hex
             st.session_state.persona_order.append(pid)
-            st.session_state[f"persona_text::{pid}"] = text
+            st.session_state.persona_store[pid] = text
     if "survey_question" not in st.session_state:
         st.session_state.survey_question = DEFAULT_QUESTION
     if "results" not in st.session_state:
@@ -387,7 +400,10 @@ for pid in list(st.session_state.persona_order):
     col_text, col_remove = st.columns([10, 1])
     col_text.text_area(
         "受訪者人格描述",
+        value=st.session_state.persona_store[pid],
         key=f"persona_text::{pid}",
+        on_change=_sync_persona,
+        args=(pid,),
         height=80,
         label_visibility="collapsed",
         placeholder=(
@@ -403,7 +419,7 @@ st.button("+ 新增受訪者", on_click=_add_persona)
 # --- 3. Run ---
 st.subheader("3. 執行")
 persona_texts = [
-    st.session_state[f"persona_text::{pid}"] for pid in st.session_state.persona_order
+    st.session_state.persona_store[pid] for pid in st.session_state.persona_order
 ]
 has_blank = any(not t.strip() for t in persona_texts)
 question_blank = not st.session_state.survey_question.strip()
