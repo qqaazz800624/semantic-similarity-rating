@@ -1,5 +1,15 @@
 # Used by Streamlit Community Cloud (and any plain-pip setup) to install the app.
+# NOTE: Streamlit Cloud only re-installs dependencies when THIS file changes —
+# new packages added to pyproject.toml's [app] extra must also be listed here
+# explicitly, or the cloud instance will keep its stale environment.
 # The extra index serves CPU-only torch wheels — the default CUDA build is too
 # large for the cloud instance and pointless there (no GPU).
 --extra-index-url https://download.pytorch.org/whl/cpu
 .[app]
+streamlit>=1.38
+plotly>=5.20
+google-genai>=0.3
+python-dotenv>=1.0
+torchvision>=0.20
+openpyxl>=3.1
+pandas>=2.0
