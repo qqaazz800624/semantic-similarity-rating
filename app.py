@@ -390,6 +390,11 @@ for pid in list(st.session_state.persona_order):
         key=f"persona_text::{pid}",
         height=80,
         label_visibility="collapsed",
+        placeholder=(
+            "描述這位受訪者的背景與個性（建議用英文，回答品質較穩定），例如："
+            "You are a 35-year-old nurse who works night shifts and is "
+            "skeptical of new technology."
+        ),
     )
     col_remove.button("移除", key=f"remove::{pid}", on_click=_remove_persona, args=(pid,))
 
