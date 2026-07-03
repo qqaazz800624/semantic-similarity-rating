@@ -142,6 +142,31 @@ Notes:
 - The app runs on your machine: keep it on and connected (the script uses `caffeinate` to prevent sleep while serving).
 - Stop sharing with `Ctrl+C`.
 
+### Deploying to Streamlit Community Cloud (fixed URL, no machine needed)
+
+For a **permanent URL** that works without keeping your computer on, deploy to [Streamlit Community Cloud](https://share.streamlit.io) (free) straight from this GitHub repo:
+
+1. Push the latest code to GitHub (`git push`).
+2. Go to [share.streamlit.io](https://share.streamlit.io) and sign in **with your GitHub account**.
+3. Click **Create app** → **Deploy a public app from GitHub**, then select:
+   - Repository: `qqaazz800624/semantic-similarity-rating`
+   - Branch: `main`
+   - Main file path: `app.py`
+   - App URL: pick a custom subdomain — this becomes the permanent address, e.g. `https://your-name.streamlit.app`
+4. Open **Advanced settings → Secrets** and add (TOML format):
+   ```toml
+   GOOGLE_API_KEY = "your-key"
+   ```
+   Optionally also `APP_PASSWORD = "..."` if you want a password gate on top.
+5. Click **Deploy**. First build takes several minutes (it downloads PyTorch and the embedding model).
+6. Restrict who can open the app: in the app's **Settings → Sharing**, set viewers to **Only specific people** and invite your colleague's email — she signs in with that Google/GitHub account once, no password to pass around.
+
+Notes:
+
+- Dependencies are installed from `requirements.txt`, which pins CPU-only PyTorch wheels to fit the free instance.
+- Never commit `.env` — on the cloud, the key lives in the app's Secrets instead.
+- Free-tier instances have limited memory; if the app crashes on startup, check the app logs in the Cloud dashboard.
+
 ### 5. Use the app
 
 1. (Optional) In the sidebar, pick the **LLM model** used to simulate respondents. The dropdown is fetched live from the Gemini API, so it always reflects the text-generation models your API key can use. The default `gemini-flash-lite-latest` is the fastest and cheapest; `pro`-series models give higher-quality answers but are slower and cost more.

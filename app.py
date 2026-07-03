@@ -28,6 +28,22 @@ from semantic_similarity_rating import ResponseRater
 
 load_dotenv()
 
+
+def get_config_value(name: str) -> str:
+    """Read a config value from env vars (.env locally) or st.secrets (cloud).
+
+    Streamlit Community Cloud stores secrets in st.secrets; accessing it
+    locally without a secrets.toml raises, hence the broad except.
+    """
+    value = os.environ.get(name, "")
+    if value:
+        return value
+    try:
+        return st.secrets.get(name, "")
+    except Exception:
+        return ""
+
+
 DEFAULT_MODEL_NAME = "gemini-flash-lite-latest"
 
 # The models.list endpoint also returns TTS / image / music / robotics models
@@ -220,7 +236,7 @@ def check_password() -> bool:
     No APP_PASSWORD configured -> app stays open (local/trusted-LAN use).
     Set it in .env before exposing the app through a public tunnel.
     """
-    expected = os.environ.get("APP_PASSWORD", "")
+    expected = get_config_value("APP_PASSWORD")
     if not expected:
         return True
     if st.session_state.get("password_ok"):
@@ -253,11 +269,11 @@ st.title("AI 模擬問卷調查系統")
 st.caption("讓 LLM 依據不同人格模擬填答問卷，並透過語意相似度換算成 Likert 量表機率分佈。")
 
 # --- Sidebar: API key + advanced settings ---
-env_api_key = os.environ.get("GOOGLE_API_KEY", "")
+env_api_key = get_config_value("GOOGLE_API_KEY")
 with st.sidebar:
     st.subheader("Gemini API Key")
     if env_api_key:
-        st.success("已從 .env 載入 API Key")
+        st.success("API Key 已載入（.env 或雲端 Secrets）")
         effective_api_key = env_api_key
     else:
         st.warning("未在 .env 找到 GOOGLE_API_KEY")

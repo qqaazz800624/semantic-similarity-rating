@@ -1,0 +1,5 @@
+# Used by Streamlit Community Cloud (and any plain-pip setup) to install the app.
+# The extra index serves CPU-only torch wheels — the default CUDA build is too
+# large for the cloud instance and pointless there (no GPU).
+--extra-index-url https://download.pytorch.org/whl/cpu
+.[app]
