@@ -163,10 +163,10 @@ Notes:
 
 0. On the login screen, enter your Google account (email) and your Gemini API key — the key is verified against the Gemini API before the app unlocks. Use the sidebar's **登出 (Log out)** button to switch accounts.
 1. (Optional) In the sidebar, pick the **LLM model** used to simulate respondents. The dropdown is fetched live from the Gemini API, so it always reflects the text-generation models your API key can use. The default `gemini-flash-lite-latest` is the fastest and cheapest; `pro`-series models give higher-quality answers but are slower and cost more.
-2. Enter the survey statement.
-3. Add/remove respondent personas (each one a free-text description).
-4. Click **開始模擬問卷調查 (Run survey)**.
-5. Review per-respondent and aggregated Likert-scale results (the model used is shown at the top of the results), and optionally download them as CSV.
+2. Enter the survey question(s) — either type a single statement manually, or switch to **上傳 Excel（多題）** to upload dozens of questions at once. Download the built-in Excel template (first column header `問卷題目`, one question per row) to see the expected format.
+3. Set up respondent personas — add/edit them one by one, or expand **批次匯入受訪者（Excel 上傳）** to import 50–100 personas in one file (template header `受訪者描述`, one persona per row). Importing replaces the current list; with more than 20 personas the list becomes read-only (re-upload to edit).
+4. Click **開始模擬問卷調查 (Run survey)**. Every question × persona pair is one LLM call — the app shows the total count up front and runs calls in parallel with a progress bar. Large batches on a free-tier API key may hit per-minute rate limits.
+5. Review the results: a per-question summary table (valid responses, mean score, per-point probabilities), per-question detail panels with the aggregated distribution chart and each respondent's answer, and a long-format CSV download (one row per question × persona).
 
 ## Methodology
 
