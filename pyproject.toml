@@ -27,7 +27,13 @@ classifiers = [
 
 [project.optional-dependencies]
 test = ["pytest"]
-app = ["streamlit>=1.38", "plotly>=5.20", "google-genai>=0.3", "python-dotenv>=1.0"]
+app = [
+    "streamlit>=1.38",
+    "plotly>=5.20",
+    "google-genai>=0.3",
+    "python-dotenv>=1.0",
+    "torchvision>=0.20",
+]
 
 [build-system]
 build-backend = "hatchling.build"
