@@ -82,15 +82,11 @@ A Streamlit web app (`app.py`) lets you configure a survey question and a list o
 pip install -e ".[app]"
 ```
 
-### 2. Set your Gemini API key
+### 2. Get a Gemini API key
 
-Create a `.env` file in the project root (never commit this file or hardcode the key):
+Every user signs in on the app's login screen with their **own Google account (email) and Gemini API key** — get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). The key is kept in the browser session only (never saved to disk), and each user's runs consume their own quota.
 
-```
-GOOGLE_API_KEY=your-key-here
-```
-
-If you skip this step, you can instead paste a key directly into the app's sidebar when it's running (kept in-session only, never saved to disk).
+(A `.env` file with `GOOGLE_API_KEY` is still used by the `quick_start.py` CLI demo, but the web app no longer reads it.)
 
 ### 3. Start the app
 
@@ -122,7 +118,7 @@ Network: http://<your-ip>:8501
 - Open the **Local** URL yourself.
 - Share the **Network** URL with colleagues on the same network so they can use the app from their own browser, running on your machine.
 
-> Note: with the Network URL, anyone on the same network can use the app, and every run consumes your Gemini API key's quota. Only share it with people you trust, and stop the server (`Ctrl+C`) when you're done. To require a password, add `APP_PASSWORD=your-password` to `.env`.
+> Note: with the Network URL, anyone on the same network can reach the app, but each user must sign in with their own Gemini API key, so runs consume their own quota. To additionally require a shared password before the login screen, add `APP_PASSWORD=your-password` to `.env`.
 
 ### Sharing with colleagues outside your network (e.g. working from home)
 
@@ -153,11 +149,7 @@ For a **permanent URL** that works without keeping your computer on, deploy to [
    - Branch: `main`
    - Main file path: `app.py`
    - App URL: pick a custom subdomain — this becomes the permanent address, e.g. `https://your-name.streamlit.app`
-4. Open **Advanced settings → Secrets** and add (TOML format):
-   ```toml
-   GOOGLE_API_KEY = "your-key"
-   ```
-   Optionally also `APP_PASSWORD = "..."` if you want a password gate on top.
+4. (Optional) Open **Advanced settings → Secrets** and add `APP_PASSWORD = "..."` (TOML format) if you want a shared password gate in front of the login screen. No `GOOGLE_API_KEY` secret is needed — every user signs in with their own key.
 5. Click **Deploy**. First build takes several minutes (it downloads PyTorch and the embedding model).
 6. Restrict who can open the app: in the app's **Settings → Sharing**, set viewers to **Only specific people** and invite your colleague's email — she signs in with that Google/GitHub account once, no password to pass around.
 
@@ -169,6 +161,7 @@ Notes:
 
 ### 5. Use the app
 
+0. On the login screen, enter your Google account (email) and your Gemini API key — the key is verified against the Gemini API before the app unlocks. Use the sidebar's **登出 (Log out)** button to switch accounts.
 1. (Optional) In the sidebar, pick the **LLM model** used to simulate respondents. The dropdown is fetched live from the Gemini API, so it always reflects the text-generation models your API key can use. The default `gemini-flash-lite-latest` is the fastest and cheapest; `pro`-series models give higher-quality answers but are slower and cost more.
 2. Enter the survey statement.
 3. Add/remove respondent personas (each one a free-text description).

@@ -14,6 +14,7 @@ Run:
 
 import hmac
 import os
+import re
 import time
 import uuid
 
@@ -258,9 +259,68 @@ def check_password() -> bool:
     return False
 
 
+def _validate_api_key(api_key: str) -> bool:
+    try:
+        client = genai.Client(api_key=api_key)
+        next(iter(client.models.list()), None)
+        return True
+    except Exception:
+        return False
+
+
+def check_login() -> bool:
+    """Require each user to provide their own Google account + Gemini API key.
+
+    The key is kept in this browser session only — never written to disk —
+    and all LLM calls run on the user's own quota.
+    """
+    if st.session_state.get("user_api_key"):
+        return True
+
+    st.title("AI 模擬問卷調查系統")
+    st.markdown("請先填入你的 Google 帳號與 Gemini API Key，才能開始使用。")
+    with st.form("login_form"):
+        email = st.text_input("Google 帳號（email）")
+        api_key = st.text_input(
+            "Gemini API Key",
+            type="password",
+            help="可到 https://aistudio.google.com/apikey 免費申請。"
+            "Key 僅保存在你這次的瀏覽器工作階段，不會被儲存。",
+        )
+        submitted = st.form_submit_button("開始使用", type="primary")
+
+    if submitted:
+        email = (email or "").strip()
+        api_key = (api_key or "").strip()
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+            st.error("請輸入有效的 Google 帳號（email 格式）。")
+        elif not api_key:
+            st.error("請輸入 Gemini API Key。")
+        else:
+            with st.spinner("驗證 API Key 中..."):
+                if _validate_api_key(api_key):
+                    st.session_state.user_email = email
+                    st.session_state.user_api_key = api_key
+                    st.rerun()
+                else:
+                    st.error(
+                        "API Key 驗證失敗，請確認 Key 是否正確、"
+                        "或到 https://aistudio.google.com/apikey 重新產生。"
+                    )
+    return False
+
+
+def _logout() -> None:
+    st.session_state.pop("user_email", None)
+    st.session_state.pop("user_api_key", None)
+
+
 st.set_page_config(page_title="AI 模擬問卷調查系統", layout="wide")
 
 if not check_password():
+    st.stop()
+
+if not check_login():
     st.stop()
 
 _init_state()
@@ -268,20 +328,13 @@ _init_state()
 st.title("AI 模擬問卷調查系統")
 st.caption("讓 LLM 依據不同人格模擬填答問卷，並透過語意相似度換算成 Likert 量表機率分佈。")
 
-# --- Sidebar: API key + advanced settings ---
-env_api_key = get_config_value("GOOGLE_API_KEY")
+# --- Sidebar: user info + advanced settings ---
+effective_api_key = st.session_state.user_api_key
 with st.sidebar:
-    st.subheader("Gemini API Key")
-    if env_api_key:
-        st.success("API Key 已載入（.env 或雲端 Secrets）")
-        effective_api_key = env_api_key
-    else:
-        st.warning("未在 .env 找到 GOOGLE_API_KEY")
-        effective_api_key = st.text_input(
-            "貼上 Gemini API Key（僅此次 session 使用，不會被儲存）",
-            type="password",
-            key="api_key_override",
-        )
+    st.subheader("使用者")
+    st.write(st.session_state.user_email)
+    st.caption("API Key 僅保存在此瀏覽器工作階段，使用你自己的額度。")
+    st.button("登出", on_click=_logout)
 
     st.subheader("LLM 模型")
     if effective_api_key:
