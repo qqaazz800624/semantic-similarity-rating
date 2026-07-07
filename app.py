@@ -14,6 +14,7 @@ Run:
 import hmac
 import os
 import re
+import secrets
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -416,6 +417,53 @@ def _validate_api_key(api_key: str) -> bool:
         return False
 
 
+# --- Login persistence across browser refreshes ---
+# A page refresh tears down the Streamlit session (and its session_state), so
+# logins were lost instantly. On login we mint a random token, keep the
+# credentials in this server-process store, and put the token in the URL's
+# query params — the URL survives the refresh, so the session is restored.
+# Tokens expire after LOGIN_TTL_SECONDS and die with the server process
+# (e.g. cloud hibernation); logout revokes immediately.
+LOGIN_TTL_SECONDS = 12 * 3600
+
+
+@st.cache_resource(show_spinner=False)
+def _login_tokens() -> dict[str, dict]:
+    return {}
+
+
+def _restore_login_from_token() -> None:
+    if st.session_state.get("user_api_key"):
+        return
+    token = st.query_params.get("token", "")
+    if not token:
+        return
+    tokens = _login_tokens()
+    now = time.time()
+    for stale in [t for t, info in tokens.items() if info["expires"] < now]:
+        tokens.pop(stale, None)
+    info = tokens.get(token)
+    if info:
+        st.session_state.user_email = info["email"]
+        st.session_state.user_api_key = info["api_key"]
+        st.session_state.login_token = token
+        # A valid token proves this browser already passed the password gate.
+        st.session_state.password_ok = True
+    elif "token" in st.query_params:
+        del st.query_params["token"]
+
+
+def _register_login_token(email: str, api_key: str) -> None:
+    token = secrets.token_urlsafe(24)
+    _login_tokens()[token] = {
+        "email": email,
+        "api_key": api_key,
+        "expires": time.time() + LOGIN_TTL_SECONDS,
+    }
+    st.session_state.login_token = token
+    st.query_params["token"] = token
+
+
 def check_login() -> bool:
     """Require each user to provide their own Google account + Gemini API key.
 
@@ -449,6 +497,7 @@ def check_login() -> bool:
                 if _validate_api_key(api_key):
                     st.session_state.user_email = email
                     st.session_state.user_api_key = api_key
+                    _register_login_token(email, api_key)
                     st.rerun()
                 else:
                     st.error(
@@ -459,11 +508,17 @@ def check_login() -> bool:
 
 
 def _logout() -> None:
+    _login_tokens().pop(st.session_state.get("login_token", ""), None)
+    if "token" in st.query_params:
+        del st.query_params["token"]
+    st.session_state.pop("login_token", None)
     st.session_state.pop("user_email", None)
     st.session_state.pop("user_api_key", None)
 
 
 st.set_page_config(page_title="AI 模擬問卷調查系統", layout="wide")
+
+_restore_login_from_token()
 
 if not check_password():
     st.stop()
