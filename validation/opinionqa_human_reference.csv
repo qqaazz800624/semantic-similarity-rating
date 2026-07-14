@@ -1,0 +1,19 @@
+question,wave,pew_key,n_human,human_p1,human_p2,human_p3,human_p4,human_p5,human_mean
+Greater social acceptance of people who are transgender is good for our society.,W92,SOCIETY_TRANS_W92,10120,0.184809,0.13905,0.29196,0.153128,0.231052,3.1066
+Increased public attention to the history of slavery and racism in America is good for our society.,W92,SOCIETY_RHIST_W92,10142,0.115036,0.145389,0.208397,0.231941,0.299236,3.455
+It is good for our society that good-paying jobs increasingly require a college degree.,W92,SOCIETY_JBCLL_W92,10145,0.090668,0.301324,0.304672,0.222833,0.080502,2.9012
+The decline in the share of Americans belonging to an organized religion is good for our society.,W92,SOCIETY_RELG_W92,10127,0.185999,0.242903,0.351777,0.109127,0.110193,2.7146
+White people declining as a share of the U.S. population is good for our society.,W92,SOCIETY_WHT_W92,10118,0.091962,0.136095,0.620316,0.0848,0.066828,2.8984
+An increase in the number of guns in the U.S. is good for our society.,W92,SOCIETY_GUNS_W92,10175,0.328258,0.200229,0.260504,0.115373,0.095636,2.4499
+Same-sex marriages being legal in the U.S. is good for our society.,W92,SOCIETY_SSM_W92,10151,0.193171,0.109452,0.339415,0.105545,0.252417,3.1146
+The country's current economic conditions are helping me and my family.,W54,ECON5_a_W54,6822,0.156824,0.310724,0.220598,0.228212,0.083641,2.7711
+The country's current economic conditions are helping people who are wealthy.,W54,ECON5_b_W54,3404,0.041476,0.062034,0.196718,0.161569,0.538203,4.093
+The country's current economic conditions are helping the middle class.,W54,ECON5_c_W54,3411,0.270711,0.310415,0.097079,0.225498,0.096297,2.5663
+The country's current economic conditions are helping people who are poor.,W54,ECON5_d_W54,3408,0.506495,0.142925,0.081608,0.161752,0.10722,2.2203
+The country's current economic conditions are helping older adults.,W54,ECON5_e_W54,3405,0.344421,0.28179,0.106137,0.185008,0.082644,2.3797
+The country's current economic conditions are helping young adults.,W54,ECON5_f_W54,3398,0.303464,0.311505,0.10203,0.176619,0.106382,2.4709
+The country's current economic conditions are helping people who are white.,W54,ECON5_g_W54,3386,0.075811,0.165556,0.293812,0.249182,0.215639,3.3633
+The country's current economic conditions are helping people who are black.,W54,ECON5_h_W54,3388,0.257699,0.233201,0.20468,0.170636,0.133785,2.6896
+The country's current economic conditions are helping people who are Hispanic.,W54,ECON5_i_W54,3382,0.226825,0.249832,0.211464,0.167443,0.144435,2.7528
+The country's current economic conditions are helping people without college degrees.,W54,ECON5_j_W54,3401,0.320145,0.303325,0.140351,0.149313,0.086865,2.3794
+The country's current economic conditions are helping people with college degrees.,W54,ECON5_k_W54,3390,0.092426,0.213434,0.189808,0.325634,0.178698,3.2847
